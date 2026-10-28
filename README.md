@@ -127,7 +127,7 @@ java -jar target/secure-file-share-1.0.0.jar
 
 ---
 
-## Switching to MySQL (Production / Examination Mode)
+## Switching to MySQL (Production )
 
 1. Create a MySQL database:
 ```sql
