@@ -1,7 +1,7 @@
-package com.project.fileshare.dto;
+package com.project.fileshare.model;
 
 /**
- * Data Transfer Object submitted by the receiver to download and decrypt a shared file.
+ * Model / DTO submitted by the receiver to download and decrypt a shared file.
  */
 public class DownloadRequestDto {
 
@@ -32,4 +32,3 @@ public class DownloadRequestDto {
         this.privateKeyBase64 = privateKeyBase64;
     }
 }
-

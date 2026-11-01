@@ -2,10 +2,10 @@ package com.project.fileshare;
 
 import com.project.fileshare.config.StorageConfig;
 import com.project.fileshare.controller.FileShareController;
-import com.project.fileshare.dto.DownloadRequestDto;
-import com.project.fileshare.dto.FileMetadataDto;
-import com.project.fileshare.dto.UploadResponseDto;
-import com.project.fileshare.entity.SharedFile;
+import com.project.fileshare.model.DownloadRequestDto;
+import com.project.fileshare.model.FileMetadataDto;
+import com.project.fileshare.model.UploadResponseDto;
+import com.project.fileshare.model.SharedFile;
 import com.project.fileshare.repository.SharedFileRepository;
 import com.project.fileshare.service.AesGcmService;
 import com.project.fileshare.service.FileStorageService;

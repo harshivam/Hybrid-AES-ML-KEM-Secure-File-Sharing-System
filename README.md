@@ -4,7 +4,7 @@ An academic demonstration project implementing a **Post-Quantum Hybrid Cryptogra
 1. **NIST FIPS 203 ML-KEM-768 (CRYSTALS-Kyber)** for quantum-resistant ephemeral key encapsulation.
 2. **AES-256-GCM (Galois/Counter Mode)** for high-throughput authenticated symmetric data encryption.
 
-Served via a clean, monolithic **Spring Boot 3.x** backend with native, dependency-free responsive HTML/JS web interfaces.
+Served via a clean, monolithic **Spring Boot 3.x (Spring MVC)** backend with native, dependency-free responsive HTML/JS web interfaces.
 
 ---
 
@@ -50,10 +50,10 @@ Benchmarks are displayed directly in the web UI and logged to the server console
 
 ---
 
-## Project Structure
+## Project Structure (Spring MVC Architecture)
 
 ```
-c:\Users\harshivam\java_project/
+c:/Users/harshivam/java_project/
 ├── pom.xml                                  // Maven dependencies & build plugins
 ├── storage/
 │   └── encrypted/                           // Local encrypted blob storage directory
@@ -64,13 +64,13 @@ c:\Users\harshivam\java_project/
     │   │   ├── config/
     │   │   │   └── StorageConfig.java       // Storage path setup & directory initialization
     │   │   ├── controller/
-    │   │   │   └── FileShareController.java // REST API (/upload, /metadata, /download)
-    │   │   ├── dto/
-    │   │   │   ├── UploadResponseDto.java   // File UUID, downloadUrl, privateKeyBase64, metrics
-    │   │   │   ├── DownloadRequestDto.java  // File UUID, privateKeyBase64
-    │   │   │   └── FileMetadataDto.java     // Non-sensitive preview metadata
-    │   │   ├── entity/
-    │   │   │   └── SharedFile.java          // JPA entity mapping metadata & encapsulated key
+    │   │   │   ├── FileShareController.java // REST Controller (/upload, /metadata, /download)
+    │   │   │   └── ViewController.java      // MVC Page Controller (/download, /upload, /)
+    │   │   ├── model/
+    │   │   │   ├── SharedFile.java          // JPA Entity Model mapping metadata & encapsulated key
+    │   │   │   ├── UploadResponseDto.java   // Response Model (UUID, downloadUrl, privateKeyBase64, metrics)
+    │   │   │   ├── DownloadRequestDto.java  // Request Model (UUID, privateKeyBase64)
+    │   │   │   └── FileMetadataDto.java     // Preview Metadata Model
     │   │   ├── repository/
     │   │   │   └── SharedFileRepository.java// Spring Data JPA repository
     │   │   └── service/
@@ -80,8 +80,8 @@ c:\Users\harshivam\java_project/
     │   └── resources/
     │       ├── application.properties       // DB and upload size limits
     │       └── static/
-    │           ├── index.html               // Sender upload page
-    │           ├── download.html            // Receiver download & decrypt page
+    │           ├── index.html               // Sender upload view
+    │           ├── download.html            // Receiver download & decrypt view
     │           ├── css/
     │           │   └── style.css            // Minimalistic, academic CSS styling
     │           └── js/
@@ -118,8 +118,8 @@ java -jar target/secure-file-share-1.0.0.jar
 ```
 
 ### 3. Open in Browser
-- **Sender Page (Upload)**: [http://localhost:8080/index.html](http://localhost:8080/index.html)
-- **Receiver Page (Download & Decrypt)**: [http://localhost:8080/download.html](http://localhost:8080/download.html)
+- **Sender Page (Upload)**: [http://localhost:8080/index.html](http://localhost:8080/index.html) or [http://localhost:8080/](http://localhost:8080/)
+- **Receiver Page (Download & Decrypt)**: [http://localhost:8080/download.html](http://localhost:8080/download.html) or [http://localhost:8080/download](http://localhost:8080/download)
 - **H2 Database Console**: [http://localhost:8080/h2-console](http://localhost:8080/h2-console)
   - JDBC URL: `jdbc:h2:mem:filesharedb`
   - User Name: `sa`
@@ -127,7 +127,7 @@ java -jar target/secure-file-share-1.0.0.jar
 
 ---
 
-## Switching to MySQL (Production )
+## Switching to MySQL (Production / Examination Mode)
 
 1. Create a MySQL database:
 ```sql
@@ -162,4 +162,3 @@ All 6 tests verify:
 - AES-256-GCM 12-byte IV prepending and authenticated tag integrity.
 - Tamper detection (modified ciphertext triggers decryption authentication failure).
 - End-to-end file sharing controller upload and download pipeline.
-

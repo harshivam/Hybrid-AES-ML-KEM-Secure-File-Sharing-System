@@ -1,9 +1,9 @@
-package com.project.fileshare.dto;
+package com.project.fileshare.model;
 
 import java.time.LocalDateTime;
 
 /**
- * Data Transfer Object providing non-sensitive metadata for file verification
+ * Model / DTO providing non-sensitive metadata for file verification
  * before a receiver initiates decryption.
  */
 public class FileMetadataDto {
@@ -65,4 +65,3 @@ public class FileMetadataDto {
         this.uploadTimestamp = uploadTimestamp;
     }
 }
-

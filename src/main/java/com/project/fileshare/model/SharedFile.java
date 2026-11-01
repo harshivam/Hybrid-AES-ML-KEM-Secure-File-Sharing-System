@@ -1,10 +1,10 @@
-package com.project.fileshare.entity;
+package com.project.fileshare.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 /**
- * JPA Entity representing the cryptographic metadata and storage reference
+ * JPA Entity Model representing the cryptographic metadata and storage reference
  * for an encrypted file shared via Hybrid AES-ML-KEM.
  */
 @Entity

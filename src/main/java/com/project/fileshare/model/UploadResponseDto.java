@@ -1,7 +1,7 @@
-package com.project.fileshare.dto;
+package com.project.fileshare.model;
 
 /**
- * Data Transfer Object returned after successful file encryption and upload.
+ * Model / DTO returned after successful file encryption and upload.
  * Contains identifiers, shareable links, and academic benchmark metrics.
  */
 public class UploadResponseDto {
@@ -107,4 +107,3 @@ public class UploadResponseDto {
         this.totalProcessingTimeMs = totalProcessingTimeMs;
     }
 }
-
