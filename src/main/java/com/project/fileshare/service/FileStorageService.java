@@ -11,9 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
-/**
- * Service managing local disk storage operations for encrypted ciphertext blobs.
- */
+// service for saving and loading the encypted binary file on disk
 @Service
 public class FileStorageService {
 
@@ -24,14 +22,7 @@ public class FileStorageService {
         this.storageConfig = storageConfig;
     }
 
-    /**
-     * Persists the encrypted ciphertext blob (with prepended IV) to the local storage directory.
-     *
-     * @param fileId unique UUID string
-     * @param encryptedData byte array containing [IV + Ciphertext]
-     * @return the string representation of the saved file's path
-     * @throws IOException if disk write fails
-     */
+    // saves the encypted blob as a .enc file using the file id
     public String storeEncryptedFile(String fileId, byte[] encryptedData) throws IOException {
         Path targetPath = storageConfig.getStoragePath().resolve(fileId + ".enc").normalize();
         Files.write(targetPath, encryptedData,
@@ -42,13 +33,7 @@ public class FileStorageService {
         return targetPath.toString();
     }
 
-    /**
-     * Reads the encrypted file blob from local disk.
-     *
-     * @param storagePath the absolute or relative path where the file is stored
-     * @return byte array containing [IV + Ciphertext]
-     * @throws IOException if file cannot be read
-     */
+    // reads the raw encypted bytes from local storage
     public byte[] loadEncryptedFile(String storagePath) throws IOException {
         Path path = Paths.get(storagePath).toAbsolutePath().normalize();
         if (!Files.exists(path)) {
@@ -57,12 +42,7 @@ public class FileStorageService {
         return Files.readAllBytes(path);
     }
 
-    /**
-     * Deletes an encrypted file blob from disk (if needed).
-     *
-     * @param storagePath path to the file
-     * @return true if deleted, false otherwise
-     */
+    // deletes the file from disk if neccessary
     public boolean deleteEncryptedFile(String storagePath) {
         try {
             Path path = Paths.get(storagePath).toAbsolutePath().normalize();
@@ -73,4 +53,3 @@ public class FileStorageService {
         }
     }
 }
-

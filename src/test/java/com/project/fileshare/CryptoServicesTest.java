@@ -3,12 +3,10 @@ package com.project.fileshare;
 import com.project.fileshare.service.AesGcmService;
 import com.project.fileshare.service.MlKemService;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,10 +21,10 @@ public class CryptoServicesTest {
         aesGcmService = new AesGcmService();
     }
 
+    // test ml-kem keygen, encapsulation and decapsulation
     @Test
-    @DisplayName("ML-KEM-768: KeyGen, Encapsulation, and Decapsulation recover identical shared secret")
     void testMlKemWorkflow() {
-        // 1. Key Generation
+        // keygen
         MlKemService.KeyGenResult keyGenResult = mlKemService.generateKeyPairWithTiming();
         assertNotNull(keyGenResult.getPublicKey());
         assertNotNull(keyGenResult.getPrivateKey());
@@ -36,41 +34,41 @@ public class CryptoServicesTest {
         assertNotNull(privateKeyBase64);
         assertFalse(privateKeyBase64.isBlank());
 
-        // 2. Encapsulation
+        // encapsulation
         MlKemService.EncapsulationResult encResult = mlKemService.encapsulate(keyGenResult.getPublicKey());
         assertNotNull(encResult.sharedSecret());
         assertNotNull(encResult.encapsulatedKey());
 
-        // Kyber-768 produces a 32-byte (256-bit) shared secret and 1088-byte encapsulation
+        // kyber-768 produces 32 byte secret and 1088 byte encap key
         assertEquals(32, encResult.sharedSecret().length, "Shared secret must be 256 bits (32 bytes)");
         assertEquals(1088, encResult.encapsulatedKey().length, "Kyber-768 encapsulated key must be 1088 bytes");
 
-        // 3. Decapsulation
+        // decapsulation
         byte[] recoveredSecret = mlKemService.decapsulate(privateKeyBase64, encResult.encapsulatedKey());
         assertArrayEquals(encResult.sharedSecret(), recoveredSecret, "Recovered shared secret must match original encapsulated secret");
     }
 
+    // test aes-gcm encryption and decryption with 12 byte iv
     @Test
-    @DisplayName("AES-256-GCM: Encrypt, prepend 12-byte IV, and Decrypt")
     void testAesGcmWorkflow() throws Exception {
         byte[] sampleData = "Academic evaluation text for Hybrid AES-ML-KEM secure file sharing.".getBytes(StandardCharsets.UTF_8);
         byte[] fakeAesKey = new byte[32];
         Arrays.fill(fakeAesKey, (byte) 0x42);
 
-        // Encrypt
+        // encrypt
         AesGcmService.EncryptionResult encResult = aesGcmService.encryptWithTiming(sampleData, fakeAesKey);
         byte[] cipherWithIv = encResult.cipherDataWithIv();
 
-        // Must be larger than sample data due to 12-byte IV + 16-byte GCM tag
+        // 12 byte iv + 16 byte gcm tag added
         assertEquals(sampleData.length + 12 + 16, cipherWithIv.length);
 
-        // Decrypt
+        // decrypt
         AesGcmService.DecryptionResult decResult = aesGcmService.decryptWithTiming(cipherWithIv, fakeAesKey);
         assertArrayEquals(sampleData, decResult.plainData());
     }
 
+    // verify tampered ciphertext throws authentication error
     @Test
-    @DisplayName("AES-256-GCM: Tampered ciphertext should fail authentication")
     void testAesGcmTamperDetection() throws Exception {
         byte[] sampleData = "Sensitive academic research data".getBytes(StandardCharsets.UTF_8);
         byte[] key = new byte[32];
@@ -79,15 +77,15 @@ public class CryptoServicesTest {
         AesGcmService.EncryptionResult encResult = aesGcmService.encryptWithTiming(sampleData, key);
         byte[] cipherWithIv = encResult.cipherDataWithIv();
 
-        // Tamper with one byte in the ciphertext payload
+        // change last byte
         cipherWithIv[cipherWithIv.length - 1] ^= 0x55;
 
-        // Decryption should fail due to AEAD tag verification failure
+        // should fail tag verification
         assertThrows(Exception.class, () -> aesGcmService.decryptWithTiming(cipherWithIv, key));
     }
 
+    // test invalid private key bytes
     @Test
-    @DisplayName("ML-KEM-768: Decapsulation with invalid private key length throws exception")
     void testMlKemInvalidKey() {
         MlKemService.KeyGenResult keyGen = mlKemService.generateKeyPairWithTiming();
         MlKemService.EncapsulationResult encResult = mlKemService.encapsulate(keyGen.getPublicKey());
@@ -97,31 +95,30 @@ public class CryptoServicesTest {
         });
     }
 
+    // test end to end flow with both algorithms together
     @Test
-    @DisplayName("End-to-End Hybrid Flow: ML-KEM + AES-256-GCM")
     void testEndToEndHybridWorkflow() throws Exception {
         byte[] originalContent = "Confidential quantum-resistant academic thesis payload!".getBytes(StandardCharsets.UTF_8);
 
-        // 1. Sender generates ephemeral ML-KEM keypair
+        // sender generates keypair
         MlKemService.KeyGenResult keyGen = mlKemService.generateKeyPairWithTiming();
 
-        // 2. Sender encapsulates to get AES key & encapsulated key
+        // sender encapsulates
         MlKemService.EncapsulationResult encap = mlKemService.encapsulate(keyGen.getPublicKey());
         byte[] aesKey = encap.sharedSecret();
         byte[] encapsulatedKey = encap.encapsulatedKey();
 
-        // 3. Sender encrypts file with AES-256-GCM
+        // sender encrypts file
         AesGcmService.EncryptionResult encResult = aesGcmService.encryptWithTiming(originalContent, aesKey);
         byte[] encryptedFileBlob = encResult.cipherDataWithIv();
 
-        // Simulated transmission: Receiver gets privateKeyBase64, encapsulatedKey, and encryptedFileBlob
         String receiverPrivateKeyBase64 = keyGen.getPrivateKeyBase64();
 
-        // 4. Receiver decapsulates AES key using ML-KEM private key
+        // reciever decapsulates aes key
         byte[] receiverRecoveredAesKey = mlKemService.decapsulate(receiverPrivateKeyBase64, encapsulatedKey);
         assertArrayEquals(aesKey, receiverRecoveredAesKey);
 
-        // 5. Receiver decrypts file blob with recovered AES key
+        // reciever decrpyts payload
         AesGcmService.DecryptionResult decResult = aesGcmService.decryptWithTiming(encryptedFileBlob, receiverRecoveredAesKey);
         assertArrayEquals(originalContent, decResult.plainData());
     }

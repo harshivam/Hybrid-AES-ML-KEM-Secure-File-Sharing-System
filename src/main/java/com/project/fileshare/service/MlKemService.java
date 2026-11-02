@@ -16,31 +16,20 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-/**
- * Service providing Post-Quantum Cryptography operations using ML-KEM / Kyber-768
- * via Bouncy Castle PQC APIs.
- *
- * ML-KEM (Module-Lattice-Based Key-Encapsulation Mechanism, standardized in FIPS 203)
- * is derived from CRYSTALS-Kyber. Kyber-768 provides NIST Security Category 3 (comparable
- * to AES-192 in quantum resistance, and exceeding RSA-3072 / ECC P-256).
- */
+// ml-kem / kyber 768 service for keygen, encapsulation and decapsulation
 @Service
 public class MlKemService {
 
     private static final Logger logger = LoggerFactory.getLogger(MlKemService.class);
 
-    // Using Kyber-768 parameters (NIST Level 3 security)
+    // using kyber-768 paramters
     private final KyberParameters kyberParameters = KyberParameters.kyber768;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    /**
-     * Container holding the 256-bit shared secret and the encapsulated ciphertext.
-     */
+    // record for shared secret and encapsulated key
     public record EncapsulationResult(byte[] sharedSecret, byte[] encapsulatedKey) {}
 
-    /**
-     * Container holding the generated KeyPair and timing metrics.
-     */
+    // key pair holder with execution time
     public record KeyGenResult(AsymmetricCipherKeyPair keyPair, double elapsedMs) {
         public KyberPublicKeyParameters getPublicKey() {
             return (KyberPublicKeyParameters) keyPair.getPublic();
@@ -59,11 +48,7 @@ public class MlKemService {
         }
     }
 
-    /**
-     * Generates an ephemeral ML-KEM (Kyber-768) Key Pair.
-     *
-     * @return KeyGenResult containing the keypair and execution time in milliseconds.
-     */
+    // generates a new kyber768 keypair and tracks how long it took in ms
     public KeyGenResult generateKeyPairWithTiming() {
         long start = System.nanoTime();
 
@@ -79,14 +64,7 @@ public class MlKemService {
         return new KeyGenResult(keyPair, elapsedMs);
     }
 
-    /**
-     * Performs ML-KEM Encapsulation using the sender/ephemeral Public Key.
-     * Produces a 256-bit symmetric shared secret (to be used as the AES-256 key)
-     * and an encapsulated key (ciphertext) of length 1088 bytes.
-     *
-     * @param publicKey the KyberPublicKeyParameters
-     * @return EncapsulationResult containing the shared secret and encapsulated key
-     */
+    // encapsulates shared secret using public key, produces 32 byte aes key and ciphertext
     public EncapsulationResult encapsulate(KyberPublicKeyParameters publicKey) {
         KyberKEMGenerator kemGenerator = new KyberKEMGenerator(secureRandom);
         SecretWithEncapsulation secretWithEnc = kemGenerator.generateEncapsulated(publicKey);
@@ -97,30 +75,16 @@ public class MlKemService {
         return new EncapsulationResult(sharedSecret, encapsulatedKey);
     }
 
-    /**
-     * Performs ML-KEM Decapsulation using the Private Key and the Encapsulated Key.
-     * Recovers the identical 256-bit shared secret.
-     *
-     * @param privateKeyBytes the raw bytes of the private key
-     * @param encapsulatedKey the encapsulated key ciphertext (1088 bytes for Kyber-768)
-     * @return the recovered 256-bit shared secret (AES-256 key)
-     */
+    // decapsulates the shared aes key using the private key bytes
     public byte[] decapsulate(byte[] privateKeyBytes, byte[] encapsulatedKey) {
         KyberPrivateKeyParameters privateKeyParams = new KyberPrivateKeyParameters(kyberParameters, privateKeyBytes);
         KyberKEMExtractor kemExtractor = new KyberKEMExtractor(privateKeyParams);
         return kemExtractor.extractSecret(encapsulatedKey);
     }
 
-    /**
-     * Convenience method to decapsulate using a Base64-encoded private key string.
-     *
-     * @param privateKeyBase64 Base64-encoded private key
-     * @param encapsulatedKey encapsulated key ciphertext
-     * @return the recovered 256-bit shared secret (AES-256 key)
-     */
+    // helper to decapsulate using base64 encoded private key string
     public byte[] decapsulate(String privateKeyBase64, byte[] encapsulatedKey) {
         byte[] privateKeyBytes = Base64.getDecoder().decode(privateKeyBase64.trim());
         return decapsulate(privateKeyBytes, encapsulatedKey);
     }
 }
-

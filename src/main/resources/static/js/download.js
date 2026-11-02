@@ -1,4 +1,4 @@
-// JavaScript handling Receiver Verification, Decapsulation & File Download
+// reciever page script for checking file info and downloading decrpyted file
 
 document.addEventListener('DOMContentLoaded', () => {
     const fileIdInput = document.getElementById('fileIdInput');
@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const metadataCard = document.getElementById('metadataCard');
     const receiverBenchmarkCard = document.getElementById('receiverBenchmarkCard');
 
-    // Parse URL query parameters: ?id=...&key=...
+    // parse url query paramters
     const urlParams = new URLSearchParams(window.location.search);
     const idParam = urlParams.get('id');
     const keyParam = urlParams.get('key');
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         privateKeyInput.value = keyParam.trim();
     }
 
-    // Manual metadata lookup on ID blur
+    // lookup metdata if id is typed manually
     fileIdInput.addEventListener('change', () => {
         const id = fileIdInput.value.trim();
         if (id) {
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(errorText || 'Decryption failed on server.');
             }
 
-            // Extract academic performance metrics from HTTP headers
+            // extract benchmark timings from headers
             const decapTime = response.headers.get('X-Decapsulation-Time-Ms');
             const decryptTime = response.headers.get('X-Decryption-Time-Ms');
 
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 receiverBenchmarkCard.style.display = 'block';
             }
 
-            // Extract filename from Content-Disposition header
+            // extract file name from headers
             let filename = 'downloaded-file';
             const disposition = response.headers.get('Content-Disposition');
             if (disposition && disposition.indexOf('filename=') !== -1) {
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Stream blob directly to browser file download
+            // trigger browser file download
             const blob = await response.blob();
             const downloadUrl = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -164,4 +164,3 @@ document.addEventListener('DOMContentLoaded', () => {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 });
-

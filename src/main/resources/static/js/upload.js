@@ -1,4 +1,4 @@
-// JavaScript handling Sender File Upload & Post-Quantum Encryption
+// handles file upload and qr code rendering for sender
 
 document.addEventListener('DOMContentLoaded', () => {
     const dropzone = document.getElementById('dropzone');
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let selectedFile = null;
 
-    // Dropzone click & drag-and-drop triggers
+    // dropzone drag and drop listners
     dropzone.addEventListener('click', () => fileInput.click());
 
     dropzone.addEventListener('dragover', (e) => {
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function displayResults(data) {
-        // Populate identifiers and keys
+        // populate id and keys
         document.getElementById('resFileId').textContent = data.fileId;
         document.getElementById('resFileName').textContent = data.fileName;
         document.getElementById('resFileSize').textContent = formatBytes(data.fileSize);
@@ -92,22 +92,20 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('privateKeyInput').value = data.privateKeyBase64;
         document.getElementById('receiverLinkBtn').href = data.downloadUrl;
 
-        // Populate benchmark metrics
+        // show timing benchmarks
         document.getElementById('resKeyGenTime').textContent = data.keyGenTimeMs.toFixed(3) + ' ms';
         document.getElementById('resEncapTime').textContent = data.encapsulationTimeMs.toFixed(3) + ' ms';
         document.getElementById('resAesTime').textContent = data.aesEncryptionTimeMs.toFixed(3) + ' ms';
         document.getElementById('resTotalTime').textContent = data.totalProcessingTimeMs.toFixed(3) + ' ms';
 
-        // Render QR Code safely
-        // Note: Kyber-768 Base64 private keys are ~3.2 KB, exceeding standard 2.3 KB QR code capacity.
-        // Therefore, QR encodes the direct file verification link (/download.html?id={id})
+        // qr encodes download url with file id
         const qrContainer = document.getElementById('qrcode');
         const qrNotice = document.getElementById('qrNotice');
         if (qrContainer) {
             qrContainer.innerHTML = '';
             try {
                 if (typeof QRCode !== 'undefined') {
-                    // Determine base origin (prefer LAN IP from server so phone connects over Wi-Fi)
+                    // use lan ip so mobile device on same wifi can open link
                     let baseOrigin = window.location.origin;
                     if (data.downloadUrl) {
                         try {
@@ -136,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Show result card and scroll smoothly
+        // show results card
         resultCard.style.display = 'block';
         resultCard.scrollIntoView({ behavior: 'smooth' });
     }
@@ -170,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Global copy helper with visual indicator
+// helper to copy text to clipbaord
 function copyToClipboard(elementId, btnElement) {
     const input = document.getElementById(elementId);
     if (!input) return;

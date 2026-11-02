@@ -2,10 +2,7 @@ package com.project.fileshare.model;
 
 import java.time.LocalDateTime;
 
-/**
- * Model / DTO providing non-sensitive metadata for file verification
- * before a receiver initiates decryption.
- */
+// dto for sending basic file info to show on the reciever page
 public class FileMetadataDto {
 
     private String fileId;

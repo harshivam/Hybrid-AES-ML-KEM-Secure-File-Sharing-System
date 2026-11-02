@@ -1,9 +1,6 @@
 package com.project.fileshare.model;
 
-/**
- * Model / DTO returned after successful file encryption and upload.
- * Contains identifiers, shareable links, and academic benchmark metrics.
- */
+// response dto returned to client after encypting the file
 public class UploadResponseDto {
 
     private String fileId;
@@ -12,7 +9,7 @@ public class UploadResponseDto {
     private String downloadUrl;
     private String privateKeyBase64;
 
-    // Academic benchmark metrics (in milliseconds)
+    // benchmark timings in miliseconds
     private double keyGenTimeMs;
     private double encapsulationTimeMs;
     private double aesEncryptionTimeMs;

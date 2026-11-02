@@ -1,4 +1,4 @@
-/* Modern, Clean Academic UI Stylesheet for Hybrid AES-ML-KEM File Sharing */
+/* styling for fileshare frontend */
 :root {
     --bg-primary: #f8fafc;
     --bg-card: #ffffff;
@@ -137,7 +137,7 @@ main {
     margin-bottom: 1.75rem;
 }
 
-/* Upload Dropzone */
+/* drag drop area */
 .dropzone {
     border: 2px dashed #cbd5e1;
     border-radius: var(--radius);
@@ -223,7 +223,7 @@ main {
     align-items: center;
 }
 
-/* Benchmark Metrics Table */
+/* benchmark table */
 .benchmark-table {
     width: 100%;
     border-collapse: collapse;
@@ -249,7 +249,7 @@ main {
     color: #1e1b4b;
 }
 
-/* Key Display & Copy */
+/* text inputs and copy button */
 .field-group {
     margin-bottom: 1.25rem;
 }
@@ -308,7 +308,7 @@ main {
     border: 1px solid #e2e8f0;
 }
 
-/* Alert Boxes */
+/* alert boxes */
 .alert {
     padding: 0.85rem 1.2rem;
     border-radius: 8px;
@@ -360,4 +360,3 @@ footer {
     border-top: 1px solid var(--border);
     background: #ffffff;
 }
-

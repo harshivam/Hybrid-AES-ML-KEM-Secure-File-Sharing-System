@@ -11,17 +11,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 
-/**
- * Service providing authenticated symmetric encryption and decryption
- * using AES-256-GCM (Galois/Counter Mode).
- *
- * Security properties:
- * - Confidentiality & Authenticity (AEAD - Authenticated Encryption with Associated Data)
- * - 256-bit Key Length (derived from ML-KEM shared secret)
- * - 96-bit (12-byte) cryptographically secure random IV per file
- * - 128-bit GCM authentication tag
- * - IV is prepended to the ciphertext for storage and transmission
- */
+// aes 256 gcm encryption and decrpytion service with 12 byte iv
 @Service
 public class AesGcmService {
 
@@ -29,31 +19,18 @@ public class AesGcmService {
 
     private static final String AES_ALGORITHM = "AES";
     private static final String CIPHER_TRANSFORMATION = "AES/GCM/NoPadding";
-    public static final int GCM_IV_LENGTH_BYTES = 12; // 96 bits standard IV for GCM
-    public static final int GCM_TAG_LENGTH_BITS = 128; // 128-bit authentication tag
+    public static final int GCM_IV_LENGTH_BYTES = 12;
+    public static final int GCM_TAG_LENGTH_BITS = 128;
 
     private final SecureRandom secureRandom = new SecureRandom();
 
-    /**
-     * Container holding encryption result with timing metric.
-     */
+    // record to hold encrypted bytes and time taken
     public record EncryptionResult(byte[] cipherDataWithIv, double elapsedMs) {}
 
-    /**
-     * Container holding decryption result with timing metric.
-     */
+    // record to hold decrpyted plain bytes and time taken
     public record DecryptionResult(byte[] plainData, double elapsedMs) {}
 
-    /**
-     * Encrypts plaintext bytes using AES-256-GCM with a fresh 12-byte IV.
-     * The 12-byte IV is prepended to the resulting ciphertext.
-     *
-     * Format: [12-byte IV][Ciphertext + 16-byte Auth Tag]
-     *
-     * @param plainBytes the unencrypted file data
-     * @param aesKey256 32-byte (256-bit) shared secret key
-     * @return EncryptionResult containing IV-prepended encrypted bytes and elapsed time
-     */
+    // encyrpt file data with aes-gcm and attach the 12 byte iv in front of the ciphertext
     public EncryptionResult encryptWithTiming(byte[] plainBytes, byte[] aesKey256) throws Exception {
         if (aesKey256 == null || aesKey256.length != 32) {
             throw new IllegalArgumentException("AES-256 key must be exactly 32 bytes (256 bits).");
@@ -61,20 +38,20 @@ public class AesGcmService {
 
         long start = System.nanoTime();
 
-        // 1. Generate unique 12-byte IV
+        // random 12 byte iv for gcm
         byte[] iv = new byte[GCM_IV_LENGTH_BYTES];
         secureRandom.nextBytes(iv);
 
-        // 2. Initialize AES-GCM Cipher
+        // init cipher in encrypt mode
         Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
         SecretKey secretKey = new SecretKeySpec(aesKey256, AES_ALGORITHM);
         GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv);
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, parameterSpec);
 
-        // 3. Encrypt data (includes GCM authentication tag)
+        // encrypt data and generate auth tag
         byte[] cipherBytes = cipher.doFinal(plainBytes);
 
-        // 4. Prepend IV to ciphertext
+        // pack iv + cipher bytes together
         ByteBuffer buffer = ByteBuffer.allocate(GCM_IV_LENGTH_BYTES + cipherBytes.length);
         buffer.put(iv);
         buffer.put(cipherBytes);
@@ -89,14 +66,7 @@ public class AesGcmService {
         return new EncryptionResult(combinedOutput, elapsedMs);
     }
 
-    /**
-     * Decrypts ciphertext that contains a prepended 12-byte IV.
-     * Verifies the 128-bit GCM authentication tag during decryption.
-     *
-     * @param cipherDataWithIv [12-byte IV][Ciphertext + Auth Tag]
-     * @param aesKey256 32-byte (256-bit) shared secret key
-     * @return DecryptionResult containing decrypted plaintext and elapsed time
-     */
+    // decrpyts payload by pulling out the iv first and checking the tag
     public DecryptionResult decryptWithTiming(byte[] cipherDataWithIv, byte[] aesKey256) throws Exception {
         if (aesKey256 == null || aesKey256.length != 32) {
             throw new IllegalArgumentException("AES-256 key must be exactly 32 bytes (256 bits).");
@@ -109,22 +79,22 @@ public class AesGcmService {
 
         long start = System.nanoTime();
 
-        // 1. Extract 12-byte IV from the front
+        // extract iv from the first 12 bytes
         byte[] iv = new byte[GCM_IV_LENGTH_BYTES];
         System.arraycopy(cipherDataWithIv, 0, iv, 0, GCM_IV_LENGTH_BYTES);
 
-        // 2. Extract Ciphertext and Auth Tag
+        // extract the actual encrypted bytes
         int cipherTextLength = cipherDataWithIv.length - GCM_IV_LENGTH_BYTES;
         byte[] cipherBytes = new byte[cipherTextLength];
         System.arraycopy(cipherDataWithIv, GCM_IV_LENGTH_BYTES, cipherBytes, 0, cipherTextLength);
 
-        // 3. Initialize AES-GCM Cipher for Decryption
+        // init cipher in decrypt mode
         Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
         SecretKey secretKey = new SecretKeySpec(aesKey256, AES_ALGORITHM);
         GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv);
         cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec);
 
-        // 4. Decrypt and verify tag
+        // decrypt and verify authtication tag
         byte[] plainBytes = cipher.doFinal(cipherBytes);
 
         long end = System.nanoTime();
@@ -136,4 +106,3 @@ public class AesGcmService {
         return new DecryptionResult(plainBytes, elapsedMs);
     }
 }
-

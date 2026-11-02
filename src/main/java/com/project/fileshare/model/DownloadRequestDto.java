@@ -1,8 +1,6 @@
 package com.project.fileshare.model;
 
-/**
- * Model / DTO submitted by the receiver to download and decrypt a shared file.
- */
+// request payload sent by the reciever to decrypt and download
 public class DownloadRequestDto {
 
     private String fileId;

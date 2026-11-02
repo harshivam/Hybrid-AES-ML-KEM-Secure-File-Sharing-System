@@ -11,10 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * Configuration class responsible for setting up and initializing
- * the local filesystem storage directory for encrypted file blobs.
- */
+// config to create and get the storage dirctory for saving encypted files
 @Configuration
 public class StorageConfig {
 
@@ -27,6 +24,7 @@ public class StorageConfig {
         this.storageLocation = storageLocation;
     }
 
+    // creates folder if it doesnt exist on start up
     @PostConstruct
     public void init() {
         try {
@@ -42,6 +40,7 @@ public class StorageConfig {
         }
     }
 
+    // returns absolut storage path
     public Path getStoragePath() {
         return Paths.get(storageLocation).toAbsolutePath().normalize();
     }

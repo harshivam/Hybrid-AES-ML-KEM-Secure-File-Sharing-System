@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hybrid AES-ML-KEM Secure File Sharing System</title>
     <link rel="stylesheet" href="/css/style.css">
-    <!-- Lightweight QR Code CDN script -->
+    <!-- qrcode script cdn -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
@@ -29,12 +29,12 @@
         <p class="page-subtitle">
             Combines NIST FIPS 203 Post-Quantum Key Encapsulation (Kyber-768) with authenticated AES-256-GCM symmetric encryption for quantum-resilient file transfers.
         </p>
-        <span class="academic-badge">Academic Project Demonstration</span>
+        <span class="academic-badge">File Sharing System</span>
     </div>
 
     <div id="alertBox" class="alert" style="display: none;"></div>
 
-    <!-- Upload Card -->
+    <!-- upload form section -->
     <div class="card" id="uploadCard">
         <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.25rem; color: #1e1b4b;">1. Select File for Encryption</h2>
 
@@ -62,7 +62,7 @@
         </form>
     </div>
 
-    <!-- Results & Sharing Card (Initially hidden) -->
+    <!-- results and share section -->
     <div class="card" id="resultCard" style="display: none;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
             <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--success);">
@@ -77,7 +77,7 @@
             The file payload was encrypted with AES-256-GCM using a 256-bit ephemeral shared secret encapsulated via ML-KEM-768. Share the link or QR code below with the recipient.
         </p>
 
-        <!-- Benchmark Metrics Table -->
+        <!-- timing benchmarks -->
         <h3 style="font-size: 0.95rem; font-weight: 700; color: #1e1b4b; margin-top: 1rem;">Academic Performance Evaluation</h3>
         <table class="benchmark-table">
             <thead>
@@ -111,14 +111,14 @@
             </tbody>
         </table>
 
-        <!-- Metadata Summary -->
+        <!-- file details -->
         <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); margin: 1rem 0; font-size: 0.85rem;">
             <div><strong>File ID:</strong> <span id="resFileId" style="font-family: var(--font-mono);">-</span></div>
             <div><strong>File Name:</strong> <span id="resFileName">-</span></div>
             <div><strong>Original Size:</strong> <span id="resFileSize">-</span></div>
         </div>
 
-        <!-- Shareable Link -->
+        <!-- shareable link field -->
         <div class="field-group">
             <label class="field-label" for="downloadUrlInput">Shareable Download Link (Includes File ID & Key)</label>
             <div class="copy-input-container">
@@ -129,7 +129,7 @@
             </div>
         </div>
 
-        <!-- Ephemeral Private Key -->
+        <!-- private key field -->
         <div class="field-group">
             <label class="field-label" for="privateKeyInput">ML-KEM Private Key (Base64)</label>
             <div class="copy-input-container">
@@ -140,7 +140,7 @@
             </div>
         </div>
 
-        <!-- QR Code Display -->
+        <!-- qrcode display section -->
         <div class="qr-section">
             <div style="font-size: 0.9rem; font-weight: 600; color: #1e1b4b; margin-bottom: 0.75rem;">
                 Scan with Mobile / Tablet to Download
@@ -160,4 +160,3 @@
 <script src="/js/upload.js?v=3"></script>
 </body>
 </html>
-

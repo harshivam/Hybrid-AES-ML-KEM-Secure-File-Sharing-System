@@ -11,7 +11,6 @@ import com.project.fileshare.service.AesGcmService;
 import com.project.fileshare.service.FileStorageService;
 import com.project.fileshare.service.MlKemService;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Example;
@@ -50,8 +49,8 @@ public class FileShareControllerTest {
         controller = new FileShareController(mlKemService, aesGcmService, storageService, memoryRepo);
     }
 
+    // tests full controller flow: upload, check metdata, download and verify error cases
     @Test
-    @DisplayName("Controller End-to-End Test: Upload, Metadata, Download & Decrypt, and Tamper Detection")
     void testEndToEndControllerWorkflow() throws Exception {
         byte[] originalContent = "Hybrid Quantum-Resilient Cryptographic File Content for Evaluation.".getBytes(StandardCharsets.UTF_8);
         MockMultipartFile mockFile = new MockMultipartFile(
@@ -66,7 +65,7 @@ public class FileShareControllerTest {
         request.setServerName("localhost");
         request.setServerPort(8080);
 
-        // 1. Test POST /api/files/upload
+        // test file upload
         ResponseEntity<?> uploadResponse = controller.uploadFile(mockFile, request);
         assertEquals(HttpStatus.OK, uploadResponse.getStatusCode());
         assertTrue(uploadResponse.getBody() instanceof UploadResponseDto);
@@ -85,7 +84,7 @@ public class FileShareControllerTest {
         String fileId = uploadDto.getFileId();
         String privateKeyBase64 = uploadDto.getPrivateKeyBase64();
 
-        // 2. Test GET /api/files/{id}/metadata
+        // test metadata endpoint
         ResponseEntity<?> metaResponse = controller.getFileMetadata(fileId);
         assertEquals(HttpStatus.OK, metaResponse.getStatusCode());
         assertTrue(metaResponse.getBody() instanceof FileMetadataDto);
@@ -94,7 +93,7 @@ public class FileShareControllerTest {
         assertEquals("academic-report.pdf", metaDto.getFileName());
         assertEquals((long) originalContent.length, metaDto.getFileSize());
 
-        // 3. Test POST /api/files/download with valid PrivateKey
+        // test download with valid key
         DownloadRequestDto validDownload = new DownloadRequestDto(fileId, privateKeyBase64);
         ResponseEntity<?> downloadResponse = controller.downloadFile(validDownload);
         assertEquals(HttpStatus.OK, downloadResponse.getStatusCode());
@@ -103,24 +102,22 @@ public class FileShareControllerTest {
         byte[] downloadedBytes = downloadedResource.getInputStream().readAllBytes();
         assertArrayEquals(originalContent, downloadedBytes, "Decrypted downloaded bytes must match original content");
 
-        // Verify timing headers are present
+        // check timing headers
         assertNotNull(downloadResponse.getHeaders().getFirst("X-Decapsulation-Time-Ms"));
         assertNotNull(downloadResponse.getHeaders().getFirst("X-Decryption-Time-Ms"));
 
-        // 4. Test POST /api/files/download with invalid PrivateKey (should return 400 Bad Request)
+        // test download with wrong key
         DownloadRequestDto invalidKeyDownload = new DownloadRequestDto(fileId, "A".repeat(100));
         ResponseEntity<?> badKeyResponse = controller.downloadFile(invalidKeyDownload);
         assertEquals(HttpStatus.BAD_REQUEST, badKeyResponse.getStatusCode());
 
-        // 5. Test Non-existent File ID (should return 404 Not Found)
+        // test missing file id
         DownloadRequestDto notFoundDownload = new DownloadRequestDto(UUID.randomUUID().toString(), privateKeyBase64);
         ResponseEntity<?> notFoundResponse = controller.downloadFile(notFoundDownload);
         assertEquals(HttpStatus.NOT_FOUND, notFoundResponse.getStatusCode());
     }
 
-    /**
-     * Lightweight in-memory stub for {@link SharedFileRepository}.
-     */
+    // in-memory stub repo for testing controller without real database
     private static class InMemorySharedFileRepository implements SharedFileRepository {
         private final Map<String, SharedFile> store;
 
@@ -139,34 +136,151 @@ public class FileShareControllerTest {
             return Optional.ofNullable(store.get(s));
         }
 
-        @Override public boolean existsById(String s) { return store.containsKey(s); }
-        @Override public List<SharedFile> findAll() { return new ArrayList<>(store.values()); }
-        @Override public List<SharedFile> findAllById(Iterable<String> strings) { return null; }
-        @Override public long count() { return store.size(); }
-        @Override public void deleteById(String s) { store.remove(s); }
-        @Override public void delete(SharedFile entity) { store.remove(entity.getId()); }
-        @Override public void deleteAllById(Iterable<? extends String> strings) { }
-        @Override public void deleteAll(Iterable<? extends SharedFile> entities) { }
-        @Override public void deleteAll() { store.clear(); }
-        @Override public <S extends SharedFile> List<S> saveAll(Iterable<S> entities) { return null; }
-        @Override public void flush() { }
-        @Override public <S extends SharedFile> S saveAndFlush(S entity) { return save(entity); }
-        @Override public <S extends SharedFile> List<S> saveAllAndFlush(Iterable<S> entities) { return null; }
-        @Override public void deleteAllInBatch(Iterable<SharedFile> entities) { }
-        @Override public void deleteAllByIdInBatch(Iterable<String> strings) { }
-        @Override public void deleteAllInBatch() { }
-        @Override public SharedFile getOne(String s) { return store.get(s); }
-        @Override public SharedFile getById(String s) { return store.get(s); }
-        @Override public SharedFile getReferenceById(String s) { return store.get(s); }
-        @Override public <S extends SharedFile> Optional<S> findOne(Example<S> example) { return Optional.empty(); }
-        @Override public <S extends SharedFile> List<S> findAll(Example<S> example) { return null; }
-        @Override public <S extends SharedFile> List<S> findAll(Example<S> example, Sort sort) { return null; }
-        @Override public <S extends SharedFile> Page<S> findAll(Example<S> example, Pageable pageable) { return null; }
-        @Override public <S extends SharedFile> long count(Example<S> example) { return 0; }
-        @Override public <S extends SharedFile> boolean exists(Example<S> example) { return false; }
-        @Override public <S extends SharedFile, R> R findBy(Example<S> example, Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction) { return null; }
-        @Override public List<SharedFile> findAll(Sort sort) { return null; }
-        @Override public Page<SharedFile> findAll(Pageable pageable) { return null; }
+        @Override
+        public boolean existsById(String s) {
+            return store.containsKey(s);
+        }
+
+        @Override
+        public List<SharedFile> findAll() {
+            return new ArrayList<>(store.values());
+        }
+
+        @Override
+        public List<SharedFile> findAllById(Iterable<String> strings) {
+            List<SharedFile> list = new ArrayList<>();
+            for (String id : strings) {
+                if (store.containsKey(id)) list.add(store.get(id));
+            }
+            return list;
+        }
+
+        @Override
+        public long count() {
+            return store.size();
+        }
+
+        @Override
+        public void deleteById(String s) {
+            store.remove(s);
+        }
+
+        @Override
+        public void delete(SharedFile entity) {
+            store.remove(entity.getId());
+        }
+
+        @Override
+        public void deleteAllById(Iterable<? extends String> strings) {
+            for (String s : strings) store.remove(s);
+        }
+
+        @Override
+        public void deleteAll(Iterable<? extends SharedFile> entities) {
+            for (SharedFile e : entities) store.remove(e.getId());
+        }
+
+        @Override
+        public void deleteAll() {
+            store.clear();
+        }
+
+        @Override
+        public void flush() {}
+
+        @Override
+        public <S extends SharedFile> S saveAndFlush(S entity) {
+            return save(entity);
+        }
+
+        @Override
+        public <S extends SharedFile> List<S> saveAllAndFlush(Iterable<S> entities) {
+            return saveAll(entities);
+        }
+
+        @Override
+        public void deleteAllInBatch(Iterable<SharedFile> entities) {
+            deleteAll(entities);
+        }
+
+        @Override
+        public void deleteAllByIdInBatch(Iterable<String> strings) {
+            deleteAllById(strings);
+        }
+
+        @Override
+        public void deleteAllInBatch() {
+            deleteAll();
+        }
+
+        @Override
+        public SharedFile getOne(String s) {
+            return store.get(s);
+        }
+
+        @Override
+        public SharedFile getById(String s) {
+            return store.get(s);
+        }
+
+        @Override
+        public SharedFile getReferenceById(String s) {
+            return store.get(s);
+        }
+
+        @Override
+        public <S extends SharedFile> Optional<S> findOne(Example<S> example) {
+            return Optional.empty();
+        }
+
+        @Override
+        public <S extends SharedFile> List<S> findAll(Example<S> example) {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public <S extends SharedFile> List<S> findAll(Example<S> example, Sort sort) {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public <S extends SharedFile> Page<S> findAll(Example<S> example, Pageable pageable) {
+            return Page.empty();
+        }
+
+        @Override
+        public <S extends SharedFile> long count(Example<S> example) {
+            return 0;
+        }
+
+        @Override
+        public <S extends SharedFile> boolean exists(Example<S> example) {
+            return false;
+        }
+
+        @Override
+        public <S extends SharedFile, R> R findBy(Example<S> example, Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
+            return null;
+        }
+
+        @Override
+        public <S extends SharedFile> List<S> saveAll(Iterable<S> entities) {
+            List<S> list = new ArrayList<>();
+            for (S e : entities) {
+                save(e);
+                list.add(e);
+            }
+            return list;
+        }
+
+        @Override
+        public List<SharedFile> findAll(Sort sort) {
+            return findAll();
+        }
+
+        @Override
+        public Page<SharedFile> findAll(Pageable pageable) {
+            return Page.empty();
+        }
     }
 }
-

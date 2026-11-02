@@ -3,10 +3,7 @@ package com.project.fileshare.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-/**
- * JPA Entity Model representing the cryptographic metadata and storage reference
- * for an encrypted file shared via Hybrid AES-ML-KEM.
- */
+// database entity storing file info and the encapsulated key
 @Entity
 @Table(name = "shared_files")
 public class SharedFile {
@@ -27,11 +24,7 @@ public class SharedFile {
     @Column(name = "storage_path", nullable = false)
     private String storagePath;
 
-    /**
-     * The ML-KEM encapsulated key (ciphertext) needed by the receiver
-     * along with their ephemeral private key to decapsulate the 256-bit AES shared secret.
-     * Kyber-768 encapsulation is exactly 1088 bytes.
-     */
+    // encapsulated key bytes from ml-kem (1088 bytes for kyber768)
     @Column(name = "encapsulated_key", nullable = false, length = 2048)
     private byte[] encapsulatedKey;
 

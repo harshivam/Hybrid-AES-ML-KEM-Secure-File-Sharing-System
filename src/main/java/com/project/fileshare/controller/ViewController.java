@@ -3,9 +3,7 @@ package com.project.fileshare.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
-/**
- * Spring MVC View Controller mapping frontend routes to static HTML views.
- */
+// simple page routing for frontend views
 @Controller
 public class ViewController {
 
